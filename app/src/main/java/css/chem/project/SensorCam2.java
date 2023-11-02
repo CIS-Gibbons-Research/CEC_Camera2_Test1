@@ -20,6 +20,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.util.Range;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Surface;
@@ -67,8 +68,8 @@ public class SensorCam2 {
         ORIENTATIONS.append(Surface.ROTATION_270, 180);
     }
 
-    private final int photoWidth = 2048;
-    private final int photoHeight = 1536;
+    private final int photoWidth = 1920;
+    private final int photoHeight = 1440;
 
     public SensorCam2(AppCompatActivity appContext, TextureView textureView) {
         this.context = appContext;
@@ -141,18 +142,41 @@ public class SensorCam2 {
             // set up camera for manual control
             //final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_MANUAL);
             captureBuilder.addTarget(reader.getSurface());
-            // turn the flash off
-//            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);             // set to manual flash control
-//            captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);                       // set flash off
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);             // set to manual flash control
+            captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);                       // set flash off
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);                                             // set orientation
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-            captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 0.1f);
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 66600000L);                                 // 66600000 nanoseconds is 1/15sec
+            captureBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, 1.0f);                                        // set to no Zoom
+            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 1.0f);
+            // TODO --- figure out amount for this --
+            captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 10.5f);                                      // set focal distance
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 600);                                         // set ISO sensitivity
+            //.set(CaptureRequest.LENS_APERTURE, exposureSettings.fStop);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);                             // set
+            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 4.38f);                                            // set
+            //set(requestBuilder,CaptureRequest.CONTROL_CAPTURE_INTENT, CONTROL_CAPTURE_INTENT_MANUAL);
+            //set(requestBuilder,CaptureRequest.CONTROL_AWB_MODE,CONTROL_AWB_MODE_DAYLIGHT);
 
             // check the camera attributes
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
             if (characteristics != null) {
                 Float focDist = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
                 Log.d("CIS4444", "LENS_INFO_MINIMUM_FOCUS_DISTANCE = "+focDist);
+                float[] apertures = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+                for (float apert: apertures) {
+                    Log.d("CIS4444", "Aperture available = "+apert);
+                }
+                float[] focalLength = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                for (float length: focalLength) {
+                    Log.d("CIS4444", "Focal Length available = "+length);
+                }
+                Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+                Log.d("CIS4444", "SENSOR_INFO_SENSITIVITY_RANGE (ISO) available = "+isoRange.getLower()+" - "+isoRange.getUpper());
+                Range<Float> zoomRange = characteristics.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE);
+                Log.d("CIS4444", "CONTROL_ZOOM_RATIO_RANGE = "+zoomRange.getLower()+" - "+zoomRange.getUpper());
+                Range<Long> exposureRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+                Log.d("CIS4444", "SENSOR_INFO_EXPOSURE_TIME_RANGE = "+exposureRange.getLower()+" - "+exposureRange.getUpper());
                 Size[] jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
                 for (Size size: jpegSizes) {
                     Log.d("CIS4444", "JPEG image size available = "+size.getWidth()+" X "+ size.getHeight());
