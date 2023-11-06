@@ -171,10 +171,9 @@ public class SensorCam2 {
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);             // set to manual flash control
             captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);                       // set flash off
-            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);                                             // set orientation
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-            captureBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, 1.0f);                                        // set to no Zoom
-            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 1.0f);
+//            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);                                             // set orientation
+//            captureBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, 1.0f);                                        // set to no Zoom
+//            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 1.0f);
             // TODO --- figure out amount for this --
             //.set(CaptureRequest.LENS_APERTURE, exposureSettings.fStop);
             captureBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);                             // set

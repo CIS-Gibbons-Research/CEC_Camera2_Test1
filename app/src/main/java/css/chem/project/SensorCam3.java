@@ -273,6 +273,32 @@ public class SensorCam3 {
      */
     private int mSensorOrientation;
 
+    private float focus;
+    public float setFocus(int newFocus){
+        // range of 10 to 100
+        //focus = 200.0f*percent/100 + 10;
+        // may be in diopeters --- https://stackoverflow.com/questions/60394282/unit-of-camera2-lens-focus-distance
+        focus = newFocus;
+        Log.d("CIS4444", "focus distance set to "+focus);
+        return focus;
+    }
+
+    private Integer iso;
+    public Integer setISO(int newIso){
+        // range of 100 to 1000
+        iso = newIso;
+        Log.d("CIS4444", "ISO set to "+iso);
+        return iso;
+    }
+
+    private Long exposureTime;
+    public Long setExposureTime(int milSec){
+        // range of
+        exposureTime = 100_000L *milSec + 20_000L;
+        Log.d("CIS4444", "exposureTime set to "+exposureTime);
+        return  exposureTime;
+    }
+
     /**
      * A {@link CameraCaptureSession.CaptureCallback} that handles events related to JPEG capture.
      */
@@ -700,7 +726,7 @@ public class SensorCam3 {
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
                                 // Flash is automatically enabled when necessary.
-                                setAutoFlash(mPreviewRequestBuilder);
+                                //setAutoFlash(mPreviewRequestBuilder);
 
                                 // Finally, we start displaying the camera preview.
                                 mPreviewRequest = mPreviewRequestBuilder.build();
@@ -815,10 +841,30 @@ public class SensorCam3 {
                     mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(mImageReader.getSurface());
 
-            // Use the same AE and AF modes as the preview.
-            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
-                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            setAutoFlash(captureBuilder);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_OFF);             // set to manual flash control
+            captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);                       // set flash off
+//            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);                                             // set orientation
+//            captureBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, 1.0f);                                        // set to no Zoom
+//            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 1.0f);
+//            // TODO --- figure out amount for this --
+            //.set(CaptureRequest.LENS_APERTURE, exposureSettings.fStop);
+            captureBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);                             // set
+            // These values are set by the sliders
+            //captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 10.5f);                                    // set focal distance
+            captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, focus);                                      // set focal distance
+            //captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 4.38f);                                            // set
+            //captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, focus);                                            // set
+            //captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 600);                                       // set ISO sensitivity
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);                                         // set ISO sensitivity
+            //captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 66600000L);                               // 66600000 nanoseconds is 1/15sec
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime);
+
+
+
+//            // Use the same AE and AF modes as the preview.
+//            captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
+//                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+//            setAutoFlash(captureBuilder);
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
@@ -833,7 +879,7 @@ public class SensorCam3 {
                                                @NonNull TotalCaptureResult result) {
                     showToast("Saved: " + mFile);
                     Log.d(TAG, mFile.toString());
-                    unlockFocus();
+                    //unlockFocus();
                 }
             };
 
@@ -863,29 +909,29 @@ public class SensorCam3 {
      * Unlock the focus. This method should be called when still image capture sequence is
      * finished.
      */
-    private void unlockFocus() {
-        try {
-            // Reset the auto-focus trigger
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
-            setAutoFlash(mPreviewRequestBuilder);
-            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
-                    mBackgroundHandler);
-            // After this, the camera will go back to the normal state of preview.
-            mState = STATE_PREVIEW;
-            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
-                    mBackgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void unlockFocus() {
+//        try {
+//            // Reset the auto-focus trigger
+//            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+//                    CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+//            setAutoFlash(mPreviewRequestBuilder);
+//            mCaptureSession.capture(mPreviewRequestBuilder.build(), mCaptureCallback,
+//                    mBackgroundHandler);
+//            // After this, the camera will go back to the normal state of preview.
+//            mState = STATE_PREVIEW;
+//            mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback,
+//                    mBackgroundHandler);
+//        } catch (CameraAccessException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
-        if (mFlashSupported) {
-            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
-                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-        }
-    }
+//    private void setAutoFlash(CaptureRequest.Builder requestBuilder) {
+//        if (mFlashSupported) {
+//            requestBuilder.set(CaptureRequest.CONTROL_AE_MODE,
+//                    CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+//        }
+//    }
 
     /**
      * Saves a JPEG {@link Image} into the specified {@link File}.
