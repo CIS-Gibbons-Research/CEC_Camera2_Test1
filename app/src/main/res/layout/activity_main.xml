@@ -8,24 +8,110 @@
 
     <TextureView
         android:id="@+id/textureView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="41dp"
-        app:layout_constraintBottom_toTopOf="@+id/takePhotoButton"
+        android:layout_width="416dp"
+        android:layout_height="469dp"
+        android:layout_marginBottom="25dp"
+        app:layout_constraintBottom_toTopOf="@+id/seekBarFocus"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/takePhotoButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="269dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="58dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
         android:text="Take Photo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.545"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarExposure"
+        app:layout_constraintVertical_bias="0.313" />
+
+    <SeekBar
+        android:id="@+id/seekBarFocus"
+        android:layout_width="194dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintStart_toEndOf="@+id/textView"
         app:layout_constraintTop_toBottomOf="@+id/textureView" />
+
+    <SeekBar
+        android:id="@+id/seekBarISO"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/seekBarFocus"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarFocus" />
+
+    <SeekBar
+        android:id="@+id/seekBarExposure"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="@+id/seekBarFocus"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarISO" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:text="Focus"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/seekBarFocus" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="ISO"
+        app:layout_constraintStart_toStartOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="@+id/seekBarISO" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:text="Exposure"
+        app:layout_constraintStart_toStartOf="@+id/textView"
+        app:layout_constraintTop_toTopOf="@+id/seekBarExposure" />
+
+    <TextView
+        android:id="@+id/textViewFocus"
+        android:layout_width="79dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="24dp"
+        android:text="10.0"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/seekBarFocus"
+        app:layout_constraintTop_toTopOf="@+id/seekBarFocus" />
+
+    <TextView
+        android:id="@+id/textViewISO"
+        android:layout_width="76dp"
+        android:layout_height="17dp"
+        android:text="500"
+        app:layout_constraintStart_toStartOf="@+id/textViewFocus"
+        app:layout_constraintTop_toTopOf="@+id/seekBarISO" />
+
+    <TextView
+        android:id="@+id/textViewExposure"
+        android:layout_width="75dp"
+        android:layout_height="20dp"
+        android:text="0.1"
+        app:layout_constraintStart_toStartOf="@+id/textViewISO"
+        app:layout_constraintTop_toTopOf="@+id/seekBarExposure" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -76,6 +76,32 @@ public class SensorCam2 {
         this.textureView = textureView;
     }
 
+    private float focus;
+    public float setFocus(int newFocus){
+        // range of 10 to 100
+        //focus = 200.0f*percent/100 + 10;
+        // may be in diopeters --- https://stackoverflow.com/questions/60394282/unit-of-camera2-lens-focus-distance
+        focus = newFocus;
+        Log.d("CIS4444", "focus distance set to "+focus);
+        return focus;
+    }
+
+    private Integer iso;
+    public Integer setISO(int newIso){
+        // range of 100 to 1000
+        iso = newIso;
+        Log.d("CIS4444", "ISO set to "+iso);
+        return iso;
+    }
+
+    private Long exposureTime;
+    public Long setExposureTime(int milSec){
+        // range of
+        exposureTime = 100_000L *milSec + 20_000L;
+        Log.d("CIS4444", "exposureTime set to "+exposureTime);
+        return  exposureTime;
+    }
+
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice camera) {
@@ -138,6 +164,7 @@ public class SensorCam2 {
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
 
+            Log.d(TAG, "takePicture --- creating captureBuilder");
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             // set up camera for manual control
             //final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_MANUAL);
@@ -146,42 +173,49 @@ public class SensorCam2 {
             captureBuilder.set(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);                       // set flash off
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);                                             // set orientation
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF);
-            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 66600000L);                                 // 66600000 nanoseconds is 1/15sec
             captureBuilder.set(CaptureRequest.CONTROL_ZOOM_RATIO, 1.0f);                                        // set to no Zoom
             captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 1.0f);
             // TODO --- figure out amount for this --
-            captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 10.5f);                                      // set focal distance
-            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 600);                                         // set ISO sensitivity
             //.set(CaptureRequest.LENS_APERTURE, exposureSettings.fStop);
             captureBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);                             // set
-            captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 4.38f);                                            // set
-            //set(requestBuilder,CaptureRequest.CONTROL_CAPTURE_INTENT, CONTROL_CAPTURE_INTENT_MANUAL);
-            //set(requestBuilder,CaptureRequest.CONTROL_AWB_MODE,CONTROL_AWB_MODE_DAYLIGHT);
+            // These values are set by the sliders
+            //captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 10.5f);                                    // set focal distance
+            captureBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, focus);                                      // set focal distance
+            //captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, 4.38f);                                            // set
+            //captureBuilder.set(CaptureRequest.LENS_FOCAL_LENGTH, focus);                                            // set
+            //captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, 600);                                       // set ISO sensitivity
+            captureBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);                                         // set ISO sensitivity
+            //captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, 66600000L);                               // 66600000 nanoseconds is 1/15sec
+            captureBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, exposureTime);
+
+            Log.d(TAG, "takePicture --- done setting up camera attributes");
 
             // check the camera attributes
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
-            if (characteristics != null) {
-                Float focDist = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
-                Log.d("CIS4444", "LENS_INFO_MINIMUM_FOCUS_DISTANCE = "+focDist);
-                float[] apertures = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
-                for (float apert: apertures) {
-                    Log.d("CIS4444", "Aperture available = "+apert);
-                }
-                float[] focalLength = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
-                for (float length: focalLength) {
-                    Log.d("CIS4444", "Focal Length available = "+length);
-                }
-                Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
-                Log.d("CIS4444", "SENSOR_INFO_SENSITIVITY_RANGE (ISO) available = "+isoRange.getLower()+" - "+isoRange.getUpper());
-                Range<Float> zoomRange = characteristics.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE);
-                Log.d("CIS4444", "CONTROL_ZOOM_RATIO_RANGE = "+zoomRange.getLower()+" - "+zoomRange.getUpper());
-                Range<Long> exposureRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
-                Log.d("CIS4444", "SENSOR_INFO_EXPOSURE_TIME_RANGE = "+exposureRange.getLower()+" - "+exposureRange.getUpper());
-                Size[] jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
-                for (Size size: jpegSizes) {
-                    Log.d("CIS4444", "JPEG image size available = "+size.getWidth()+" X "+ size.getHeight());
-                }
-            }
+//            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
+//            if (characteristics != null) {
+//                Float focDist = characteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+//                Log.d("CIS4444", "LENS_INFO_MINIMUM_FOCUS_DISTANCE = "+focDist);
+//                float[] apertures = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_APERTURES);
+//                for (float apert: apertures) {
+//                    Log.d("CIS4444", "Aperture available = "+apert);
+//                }
+//                float[] focalLength = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+//                for (float length: focalLength) {
+//                    Log.d("CIS4444", "Focal Length available = "+length);
+//                }
+//                Range<Integer> isoRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_SENSITIVITY_RANGE);
+//                Log.d("CIS4444", "SENSOR_INFO_SENSITIVITY_RANGE (ISO) available = "+isoRange.getLower()+" - "+isoRange.getUpper());
+//                Range<Float> zoomRange = characteristics.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE);
+//                Log.d("CIS4444", "CONTROL_ZOOM_RATIO_RANGE = "+zoomRange.getLower()+" - "+zoomRange.getUpper());
+//                Range<Long> exposureRange = characteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+//                Log.d("CIS4444", "SENSOR_INFO_EXPOSURE_TIME_RANGE = "+exposureRange.getLower()+" - "+exposureRange.getUpper());
+//                Size[] jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
+//                for (Size size: jpegSizes) {
+//                    Log.d("CIS4444", "JPEG image size available = "+size.getWidth()+" X "+ size.getHeight());
+//                }
+//                Integer focusCal = characteristics.get(CameraCharacteristics.LENS_INFO_FOCUS_DISTANCE_CALIBRATION);
+//                Log.d("CIS4444", "LENS_INFO_FOCUS_DISTANCE_CALIBRATION = "+focusCal);
+//            }
 
 
             // Save images in the users /DCIM/ChemTest/ folder
@@ -189,18 +223,23 @@ public class SensorCam2 {
             File chemTestFolder = new File(dcimFolder, "ChemTest");
             // Ensure that the ChemTest folder exists, and create it if it doesn't
             if (!chemTestFolder.exists()) {
+                Log.d(TAG, "DCIM/ChemTest folder does not exist, creating it.");
                 chemTestFolder.mkdirs();
             }
             String dateName = new SimpleDateFormat("yyyy_MM_dd_HHmmss", Locale.US).format(new Date());
             final File file = new File(chemTestFolder,"/CECsensor_"+dateName+".jpg");
 
+            Log.d(TAG, "takePicture --- setting up OnImageAvailableListener");
+
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
-
+                    Log.d(TAG, "takePicture --- onImageAvailable");
                     mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), file));
                 }
                 private void save(byte[] bytes) throws IOException {
+                    Log.d(TAG, "takePicture --- save");
+
                     OutputStream output = null;
                     try {
                         output = new FileOutputStream(file);
@@ -212,20 +251,23 @@ public class SensorCam2 {
                     }
                 }
             };
+            Log.d(TAG, "takePicture --- setting up setOnImageAvailableListener");
             reader.setOnImageAvailableListener(readerListener, mBackgroundHandler);
             final CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
+                    Log.d(TAG, "takePicture --- CameraCaptureSession");
                     super.onCaptureCompleted(session, request, result);
                     Toast.makeText(context, "Saved:" + file, Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };
-
+            Log.d(TAG, "takePicture --- setting up createCaptureSession");
             cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
                     try {
+                        Log.d(TAG, "takePicture --- onConfigured");
                         session.capture(captureBuilder.build(), captureListener, mBackgroundHandler);
                     } catch (CameraAccessException e) {
                         e.printStackTrace();
@@ -262,6 +304,7 @@ public class SensorCam2 {
 
         @Override
         public void run() {
+            Log.d(TAG, "ImageSaver --- run()");
             ByteBuffer buffer = mImage.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
@@ -288,6 +331,7 @@ public class SensorCam2 {
 
     protected void createCameraPreview() {
         try {
+            Log.d(TAG, "createCameraPreview ");
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
@@ -299,15 +343,18 @@ public class SensorCam2 {
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     //The camera is already closed
                     if (null == cameraDevice) {
+                        Log.e(TAG, "createCameraPreview --- onConfigured -- device null, camera already closed");
                         return;
                     }
                     // When the session is ready, we start displaying the preview.
                     cameraCaptureSessions = cameraCaptureSession;
+                    Log.d(TAG, "createCameraPreview --- onConfigured -- about to call updatePreview()");
                     updatePreview();
                 }
 
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    Log.e(TAG, "createCameraPreview --- onConfigureFailed");
                     Toast.makeText(context, "Configuration change", Toast.LENGTH_SHORT).show();
                 }
             }, null);
@@ -318,7 +365,7 @@ public class SensorCam2 {
 
     public void openCamera() {
         CameraManager manager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
-        Log.e(TAG, "is camera open");
+        Log.d(TAG, "is camera open");
         try {
             cameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
@@ -334,7 +381,7 @@ public class SensorCam2 {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-        Log.e(TAG, "openCamera X");
+        Log.d(TAG, "openCamera done");
     }
 
     protected void updatePreview() {

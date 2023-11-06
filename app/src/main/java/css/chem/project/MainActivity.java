@@ -2,56 +2,31 @@ package css.chem.project;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
-import android.media.ImageReader;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.util.Log;
-import android.util.Size;
-import android.util.SparseIntArray;
-import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "AndroidCameraApi";
     private Button takePictureButton;
     private TextureView textureView;
+    TextView tvFocus, tvISO, tvExposure;
+    SeekBar seekFocus, seekISO, seekExposure;
 
     private static final int REQUEST_CAMERA_PERMISSION = 200;
 
-    SensorCam2 cam;
+    SensorCam2 cam2;
+    SensorCam3 cam3;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,22 +36,91 @@ public class MainActivity extends AppCompatActivity {
         textureView = (TextureView) findViewById(R.id.textureView);
         textureView.setSurfaceTextureListener(textureListener);
 
-        cam = new SensorCam2(this, textureView);
+        cam2 = new SensorCam2(this, textureView);
+        cam3 = new SensorCam3(this, textureView);
+
+        setupSeekBars();
 
         takePictureButton = (Button) findViewById(R.id.takePhotoButton);
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cam.takePicture();
+                //cam2.takePicture();
+                cam3.takePicture();
             }
         });
+    }
+
+    private void setupSeekBars() {
+        tvFocus = findViewById(R.id.textViewFocus);
+        tvISO = findViewById(R.id.textViewISO);
+        tvExposure = findViewById(R.id.textViewExposure);
+
+        seekFocus = findViewById(R.id.seekBarFocus);
+        seekFocus.setMin(0);
+        seekFocus.setMax(200);
+        seekFocus.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d("CIS4444", "Focus seekbar set to "+progress);
+                Float focus = cam2.setFocus(progress);
+                tvFocus.setText(focus.toString());
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        seekFocus.setProgress(100);
+
+        seekISO = findViewById(R.id.seekBarISO);
+        seekISO.setMin(100);
+        seekISO.setMax(1000);
+        seekISO.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d("CIS4444", "ISO seekbar set to "+progress);
+                Integer iso = cam2.setISO(progress);
+                tvISO.setText(iso.toString());
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        seekISO.setProgress(500);
+
+        seekExposure = findViewById(R.id.seekBarExposure);
+        seekExposure.setMin(1);
+        seekExposure.setMax(1000);
+        seekExposure.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d("CIS4444", "Exposure seekbar set to "+progress);
+                Double exposure = cam2.setExposureTime(progress)/1_000_000.0;
+                tvExposure.setText(exposure.toString());
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        seekExposure.setProgress(300);
+
     }
 
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             //open your camera here
-            cam.openCamera();
+            cam3.openCamera(textureView.getWidth(), textureView.getHeight());
+            //cam2.openCamera();
         }
 
         @Override
@@ -112,9 +156,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         Log.e(TAG, "onResume");
-        cam.startBackgroundThread();
+        cam3.startBackgroundThread();;
+        //cam2.startBackgroundThread();
         if (textureView.isAvailable()) {
-            cam.openCamera();
+            //cam2.openCamera();
+            cam3.openCamera(textureView.getWidth(), textureView.getHeight());
+
         } else {
             textureView.setSurfaceTextureListener(textureListener);
         }
@@ -124,7 +171,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         Log.e(TAG, "onPause");
         //closeCamera();
-        cam.stopBackgroundThread();
+        //cam2.stopBackgroundThread();
+        cam3.onPause();
         super.onPause();
     }
 }
